@@ -2,6 +2,8 @@
 """
 Script that sends saved email after or on a specific time.
 
+Tested with outlook.com.
+username and password stored in environment variables.
 """
 from smtplib import SMTP
 from imaplib import IMAP4_SSL
@@ -15,6 +17,19 @@ smtpport = 587
 user = os.environ['OUTLOOK_USER']
 pwd = os.environ['OUTLOOK_PASS']
 folder = 'delayed'
+
+
+def get_msg_list(msg_id_list, imap_connection):
+    msg_list = []
+    for id in msg_id_list:
+        status, data = imap_connection.fetch(id, '(RFC822)')
+        if status == 'OK':
+            raw_msg = data[0][1]
+            email_msg = email.message_from_bytes(raw_msg)
+            msg_list.append(email_msg)
+        else:
+            print('Status:', status, 'Error retrieving raw message')
+    return msg_list
 
 
 def send_email_msgs(msg_list):
@@ -41,20 +56,12 @@ with IMAP4_SSL(imap_server, imapport) as i:
     status, msg_ids = i.search(None, 'ALL')
     if status == 'OK':
         if msg_ids != [b'']:
-            msg_list = []
             msg_id_list = msg_ids[0].split()
-            for id in msg_id_list:
-                status, data = i.fetch(id, '(RFC822)')
-                if status == 'OK':
-                    raw_msg = data[0][1]
-                    email_msg = email.message_from_bytes(raw_msg)
-                    msg_list.append(email_msg)
-                else:
-                    print('Status:', status, 'Error retrieving raw message')
+            msg_list = get_msg_list(msg_id_list, i)
             if len(msg_list) > 0:
-                if send_email_msgs(msg_list) == None:
-                    if delete_msgs(msg_id_list, i) == None:
-                        i.expunge()  # necessary?
+                if send_email_msgs(msg_list) is None:
+                    if delete_msgs(msg_id_list, i) is None:
+                        i.expunge()
                     else:
                         print('There was a problem deleting the messages.')
                 else:
@@ -68,7 +75,6 @@ with IMAP4_SSL(imap_server, imapport) as i:
         print('Status:', status,
               'Something went wrong while retrieving messages ids from',
               folder)
-
 
 # todo send me a confirmation, log that 1 the script started and there was no error during the sending so I know everything went according to plan.
 """Send confirmation report
