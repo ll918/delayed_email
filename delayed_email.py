@@ -29,20 +29,21 @@ def send_delayed_msg():
         status, msg_ids = i.search(None, 'ALL')
         if status == 'OK':
             if msg_ids != [b'']:
-                for id in msg_ids[0].split():
+                msg_list = []
+                msg_id_list = msg_ids[0].split()
+                for id in msg_id_list:
                     status, data = i.fetch(id, '(RFC822)')
                     if status == 'OK':
                         raw_msg = data[0][1]
                         email_msg = email.message_from_bytes(raw_msg)
+                        msg_list.append(email_msg)
                     else:
                         print('Status:', status, data)
-                    # change so that all msg sent in one connection to smtp?
-                    with SMTP(smtp_server, smtpport) as s:
-                        s.starttls()
-                        s.login(user, pwd)
-                        # add try? to catch exception. does with do the same?
-                        s.send_message(email_msg)
+                # Send the messages. Add error handling.
+                send_email_msgs(msg_list)
 
+                # Delete the messages from folder
+                for id in msg_id_list:
                     typ, data = i.store(id, '+FLAGS', '\\Deleted')
                     if typ != 'OK':
                         print('Status:', typ)
@@ -50,8 +51,18 @@ def send_delayed_msg():
                 print('Folder is empty. No messages to send.')
         else:
             print('Status:', status,
-                  'Something went wrong while retrieving messages ids.')
+                  'Something went wrong while retrieving messages ids from',
+                  folder)
         i.expunge()
+
+
+def send_email_msgs(msg_list):
+    if len(msg_list) > 0:
+        with SMTP(smtp_server, smtpport) as s:
+            s.starttls()
+            s.login(user, pwd)
+            for msg in msg_list:
+                s.send_message(msg)
 
 
 send_delayed_msg()
