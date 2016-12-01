@@ -1,8 +1,9 @@
 #!/usr/local/bin/env python3
 """
-Script that sends an email after or on a specific time.
+Script that sends saved email after or on a specific time.
 
-todo add more exception handling
+todo add more/better exception handling
+todo unit tests
 todo Optimize
 todo simplify
 """
@@ -38,41 +39,40 @@ def delete_msgs(msg_id_list, imap_connection):
             print('Status:', typ, 'Problem deleting messages.')
 
 
-def send_delayed_msg():
-    """
-    """
-    with IMAP4_SSL(imap_server, imapport) as i:
-        i.login(user, pwd)
-        i.select(folder, readonly=False)
-        status, msg_ids = i.search(None, 'ALL')
-        if status == 'OK':
-            if msg_ids != [b'']:
-                msg_list = []
-                msg_id_list = msg_ids[0].split()
-                for id in msg_id_list:
-                    status, data = i.fetch(id, '(RFC822)')
-                    if status == 'OK':
-                        raw_msg = data[0][1]
-                        email_msg = email.message_from_bytes(raw_msg)
-                        msg_list.append(email_msg)
-                    else:
-                        print('Status:', status, data)
-                if len(msg_list) > 0:
-                    if send_email_msgs(msg_list) == None:
-                        if delete_msgs(msg_id_list, i) == None:
-                            i.expunge()  # necessary?
+with IMAP4_SSL(imap_server, imapport) as i:
+    i.login(user, pwd)
+    i.select(folder, readonly=False)
+    status, msg_ids = i.search(None, 'ALL')
+    if status == 'OK':
+        if msg_ids != [b'']:
+            msg_list = []
+            msg_id_list = msg_ids[0].split()
+            for id in msg_id_list:
+                status, data = i.fetch(id, '(RFC822)')
+                if status == 'OK':
+                    raw_msg = data[0][1]
+                    email_msg = email.message_from_bytes(raw_msg)
+                    msg_list.append(email_msg)
                 else:
-                    print(
-                        'Something went wrong. List is empty')
+                    print('Status:', status, 'Error retrieving raw message')
+            if len(msg_list) > 0:
+                if send_email_msgs(msg_list) == None:
+                    if delete_msgs(msg_id_list, i) == None:
+                        i.expunge()  # necessary?
+                    else:
+                        print('There was a problem deleting the messages.')
+                else:
+                    print('There was a problem sending the messages.')
             else:
-                print('Folder is empty. No messages to send.')
+                print(
+                    'Something went wrong. List is empty but folder is not.')
         else:
-            print('Status:', status,
-                  'Something went wrong while retrieving messages ids from',
-                  folder)
+            print('Folder is empty. No messages to send.')
+    else:
+        print('Status:', status,
+              'Something went wrong while retrieving messages ids from',
+              folder)
 
-
-send_delayed_msg()
 
 # todo send me a confirmation, log that 1 the script started and there was no error during the sending so I know everything went according to plan.
 """Send confirmation report
