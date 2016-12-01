@@ -57,26 +57,19 @@ def send_delayed_msg():
                         msg_list.append(email_msg)
                     else:
                         print('Status:', status, data)
-                # Send the messages. Add error handling.
                 if len(msg_list) > 0:
-                    send_email_msgs(msg_list)
+                    if send_email_msgs(msg_list) == None:
+                        if delete_msgs(msg_id_list, i) == None:
+                            i.expunge()  # necessary?
                 else:
                     print(
-                        'Something went wrong retrieving messages. '
-                        'List is empty')
-                    exit()  # find better way
-
-                # Delete the messages from folder
-                delete_msgs(msg_id_list, i)
+                        'Something went wrong. List is empty')
             else:
                 print('Folder is empty. No messages to send.')
-                exit()
         else:
             print('Status:', status,
                   'Something went wrong while retrieving messages ids from',
                   folder)
-        # necessary?
-        i.expunge()
 
 
 send_delayed_msg()
