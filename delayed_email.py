@@ -3,7 +3,7 @@
 Script that sends saved email after or on a specific time.
 
 Tested with outlook.com.
-username and password stored in environment variables.
+Username and password stored in environment variables.
 """
 from smtplib import SMTP
 from imaplib import IMAP4_SSL
@@ -20,6 +20,8 @@ folder = 'delayed'
 
 
 def get_msg_list(msg_id_list, imap_connection):
+    """Gets a list of imap messages id and an active imap connection
+    then return a list of email.message.message"""
     msg_list = []
     for id in msg_id_list:
         status, data = imap_connection.fetch(id, '(RFC822)')
@@ -33,6 +35,7 @@ def get_msg_list(msg_id_list, imap_connection):
 
 
 def send_email_msgs(msg_list):
+    """Gets a list of email.message.message and send each of them"""
     if len(msg_list) > 0:
         with SMTP(smtp_server, smtpport) as s:
             s.starttls()
@@ -40,10 +43,13 @@ def send_email_msgs(msg_list):
             for msg in msg_list:
                 s.send_message(msg)
     else:
-        print('List is empty.')
+        print('List is empty. Nothing to send.')
 
 
 def delete_msgs(msg_id_list, imap_connection):
+    """Gets a list of imap messages id and an active imap connection and
+    deleted those message. This happens in the imap connection selected
+    folder."""
     for id in msg_id_list:
         typ, data = imap_connection.store(id, '+FLAGS', '\\Deleted')
         if typ != 'OK':
@@ -53,6 +59,7 @@ def delete_msgs(msg_id_list, imap_connection):
 with IMAP4_SSL(imap_server, imapport) as i:
     i.login(user, pwd)
     i.select(folder, readonly=False)
+
     status, msg_ids = i.search(None, 'ALL')
     if status == 'OK':
         if msg_ids != [b'']:
@@ -76,11 +83,8 @@ with IMAP4_SSL(imap_server, imapport) as i:
               'Something went wrong while retrieving messages ids from',
               folder)
 
-# todo send me a confirmation, log that 1 the script started and there was no error during the sending so I know everything went according to plan.
-"""Send confirmation report
-"""
-
-# todo add more/better exception handling
+# todo send me an email confirmation. Save to log.
+# todo more/better exception handling
 # todo unit tests
 # todo Optimize
 # todo simplify
