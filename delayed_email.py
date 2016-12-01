@@ -2,10 +2,6 @@
 """
 Script that sends saved email after or on a specific time.
 
-todo add more/better exception handling
-todo unit tests
-todo Optimize
-todo simplify
 """
 from smtplib import SMTP
 from imaplib import IMAP4_SSL
@@ -77,3 +73,8 @@ with IMAP4_SSL(imap_server, imapport) as i:
 # todo send me a confirmation, log that 1 the script started and there was no error during the sending so I know everything went according to plan.
 """Send confirmation report
 """
+
+# todo add more/better exception handling
+# todo unit tests
+# todo Optimize
+# todo simplify
