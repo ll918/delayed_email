@@ -20,6 +20,24 @@ pwd = os.environ['OUTLOOK_PASS']
 folder = 'delayed'
 
 
+def send_email_msgs(msg_list):
+    if len(msg_list) > 0:
+        with SMTP(smtp_server, smtpport) as s:
+            s.starttls()
+            s.login(user, pwd)
+            for msg in msg_list:
+                s.send_message(msg)
+    else:
+        print('List is empty.')
+
+
+def delete_msgs(msg_id_list, imap_connection):
+    for id in msg_id_list:
+        typ, data = imap_connection.store(id, '+FLAGS', '\\Deleted')
+        if typ != 'OK':
+            print('Status:', typ, 'Problem deleting messages.')
+
+
 def send_delayed_msg():
     """
     """
@@ -40,29 +58,25 @@ def send_delayed_msg():
                     else:
                         print('Status:', status, data)
                 # Send the messages. Add error handling.
-                send_email_msgs(msg_list)
+                if len(msg_list) > 0:
+                    send_email_msgs(msg_list)
+                else:
+                    print(
+                        'Something went wrong retrieving messages. '
+                        'List is empty')
+                    exit()  # find better way
 
                 # Delete the messages from folder
-                for id in msg_id_list:
-                    typ, data = i.store(id, '+FLAGS', '\\Deleted')
-                    if typ != 'OK':
-                        print('Status:', typ)
+                delete_msgs(msg_id_list, i)
             else:
                 print('Folder is empty. No messages to send.')
+                exit()
         else:
             print('Status:', status,
                   'Something went wrong while retrieving messages ids from',
                   folder)
+        # necessary?
         i.expunge()
-
-
-def send_email_msgs(msg_list):
-    if len(msg_list) > 0:
-        with SMTP(smtp_server, smtpport) as s:
-            s.starttls()
-            s.login(user, pwd)
-            for msg in msg_list:
-                s.send_message(msg)
 
 
 send_delayed_msg()
