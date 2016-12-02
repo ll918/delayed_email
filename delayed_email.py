@@ -41,7 +41,9 @@ def send_email_msgs(msg_list):
             s.starttls()
             s.login(user, pwd)
             for msg in msg_list:
-                s.send_message(msg)
+                s.send_message(
+                    msg)  # check for success before printing confirmation?
+                print(msg.get('subject'), 'was sent to', msg.get('to'))
     else:
         print('List is empty. Nothing to send.')
 
@@ -61,30 +63,26 @@ with IMAP4_SSL(imap_server, imapport) as i:
     i.select(folder, readonly=False)
 
     status, msg_ids = i.search(None, 'ALL')
-    if status == 'OK':
-        if msg_ids != [b'']:
-            msg_id_list = msg_ids[0].split()
-            msg_list = get_msg_list(msg_id_list, i)
-            if len(msg_list) > 0:
-                if send_email_msgs(msg_list) is None:
-                    if delete_msgs(msg_id_list, i) is None:
-                        i.expunge()
-                    else:
-                        print('There was a problem deleting the messages.')
-                else:
-                    print('There was a problem sending the messages.')
+    if status == 'OK' and msg_ids != [b'']:
+        msg_id_list = msg_ids[0].split()
+        msg_list = get_msg_list(msg_id_list, i)
+        if send_email_msgs(msg_list) is None:
+            if delete_msgs(msg_id_list, i) is None:
+                i.expunge()
             else:
-                print(
-                    'Something went wrong. List is empty but folder is not.')
+                print('There was a problem deleting the messages.')
         else:
-            print('Folder is empty. No messages to send.')
+            print('There was a problem sending the messages.')
     else:
-        print('Status:', status,
-              'Something went wrong while retrieving messages ids from',
-              folder)
+        if status == 'OK':
+            print('Folder is empty. No messages to send.')
+        else:
+            print('Something went wrong retrieving messages list.')
+
 
 # todo send me an email confirmation. Save to log.
 # todo more/better exception handling
+# todo multiple folders
 # todo unit tests
 # todo Optimize
 # todo simplify
