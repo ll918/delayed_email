@@ -18,6 +18,24 @@ user = os.environ['OUTLOOK_USER']
 pwd = os.environ['OUTLOOK_PASS']
 folder = 'delayed'
 
+# info for confirmation email
+sendfrom = user
+send_confirm_to = user
+msg_body = []
+success = False
+
+
+def send_confirmation():
+    """Send an email confirmation message"""
+    msg_subject = "Subject: Your delayed emails were sent"
+    msg = msg_subject + '\n'
+    for i in msg_body:
+        msg += i + '\n'
+    with SMTP(smtp_server, smtpport) as s:
+        s.starttls()
+        s.login(user, pwd)
+        s.sendmail(sendfrom, send_confirm_to, msg)
+
 
 def get_msg_list(msg_id_list, imap_connection):
     """Gets a list of imap messages id and an active imap connection
@@ -41,9 +59,8 @@ def send_email_msgs(msg_list):
             s.starttls()
             s.login(user, pwd)
             for msg in msg_list:
-                s.send_message(
-                    msg)  # check for success before printing confirmation?
-                print(msg.get('subject'), 'was sent to', msg.get('to'))
+                s.send_message(msg)
+                msg_body.append(msg.get('subject') + ' was sent to ' + msg.get('to'))
     else:
         print('List is empty. Nothing to send.')
 
@@ -69,6 +86,7 @@ with IMAP4_SSL(imap_server, imapport) as i:
         if send_email_msgs(msg_list) is None:
             if delete_msgs(msg_id_list, i) is None:
                 i.expunge()
+                success = True
             else:
                 print('There was a problem deleting the messages.')
         else:
@@ -79,10 +97,14 @@ with IMAP4_SSL(imap_server, imapport) as i:
         else:
             print('Something went wrong retrieving messages list.')
 
+if success is True:
+    send_confirmation()
+else:
+    pass
 
-# todo send me an email confirmation. Save to log.
-# todo more/better exception handling
-# todo multiple folders
-# todo unit tests
-# todo Optimize
-# todo simplify
+    # todo send me an email confirmation. Save to log.
+    # todo more/better exception handling
+    # todo multiple folders
+    # todo unit tests
+    # todo Optimize
+    # todo simplify
