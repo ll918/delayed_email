@@ -29,8 +29,8 @@ def send_confirmation():
     """Send an email confirmation message"""
     msg_subject = "Subject: Your delayed emails were sent"
     msg = msg_subject + '\n'
-    for i in msg_body:
-        msg += i + '\n'
+    for item in msg_body:
+        msg += item + '\n'
     with SMTP(smtp_server, smtpport) as s:
         s.starttls()
         s.login(user, pwd)
@@ -54,15 +54,12 @@ def get_msg_list(msg_id_list, imap_connection):
 
 def send_email_msgs(msg_list):
     """Gets a list of email.message.message and send each of them"""
-    if len(msg_list) > 0:
-        with SMTP(smtp_server, smtpport) as s:
-            s.starttls()
-            s.login(user, pwd)
-            for msg in msg_list:
-                s.send_message(msg)
-                msg_body.append(msg.get('subject') + ' was sent to ' + msg.get('to'))
-    else:
-        print('List is empty. Nothing to send.')
+    with SMTP(smtp_server, smtpport) as s:
+        s.starttls()
+        s.login(user, pwd)
+        for msg in msg_list:
+            s.send_message(msg)
+            msg_body.append(msg.get('subject') + ' was sent to ' + msg.get('to'))
 
 
 def delete_msgs(msg_id_list, imap_connection):
