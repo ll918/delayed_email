@@ -27,18 +27,6 @@ msg_body = []
 success = False
 
 
-def send_confirmation():
-    """Send an email confirmation message"""
-    msg_subject = "Subject: Your delayed emails were sent"
-    msg = msg_subject + '\n'
-    for item in msg_body:
-        msg += item + '\n'
-    with SMTP(smtp_server, smtpport) as s:
-        s.starttls()
-        s.login(user, pwd)
-        s.sendmail(send_from, send_confirm_to, msg)
-
-
 def get_msg_list(msg_id_list, imap_connection):
     """Gets a list of imap messages id and an active imap connection
     then return a list of email.message.message"""
@@ -73,6 +61,18 @@ def delete_msgs(msg_id_list, imap_connection):
         typ, data = imap_connection.store(id, '+FLAGS', '\\Deleted')
         if typ != 'OK':
             print('Status:', typ, 'Problem deleting messages.')
+
+
+def send_confirmation():
+    """Send an email confirmation message"""
+    msg_subject = "Subject: Your delayed emails were sent"
+    msg = msg_subject + '\n'
+    for item in msg_body:
+        msg += item + '\n'
+    with SMTP(smtp_server, smtpport) as s:
+        s.starttls()
+        s.login(user, pwd)
+        s.sendmail(send_from, send_confirm_to, msg)
 
 
 with IMAP4_SSL(imap_server, imapport) as i:
