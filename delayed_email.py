@@ -1,7 +1,9 @@
 #!/usr/local/bin/env python3
 """
-Script that sends saved email after or on a specific time.
+Script that sends email messages that were saved to a mailbox folder.
+When a specific condition (time or other) is reached the script is launched.
 
+Used with launchd daemon on OSX.
 Tested with outlook.com.
 Username and password stored in environment variables.
 """
@@ -19,7 +21,7 @@ pwd = os.environ['OUTLOOK_PASS']
 folder = 'delayed'
 
 # info for confirmation email
-sendfrom = user
+send_from = user
 send_confirm_to = user
 msg_body = []
 success = False
@@ -34,7 +36,7 @@ def send_confirmation():
     with SMTP(smtp_server, smtpport) as s:
         s.starttls()
         s.login(user, pwd)
-        s.sendmail(sendfrom, send_confirm_to, msg)
+        s.sendmail(send_from, send_confirm_to, msg)
 
 
 def get_msg_list(msg_id_list, imap_connection):
@@ -59,7 +61,8 @@ def send_email_msgs(msg_list):
         s.login(user, pwd)
         for msg in msg_list:
             s.send_message(msg)
-            msg_body.append(msg.get('subject') + ' was sent to ' + msg.get('to'))
+            msg_body.append(
+                msg.get('subject') + ' was sent to ' + msg.get('to'))
 
 
 def delete_msgs(msg_id_list, imap_connection):
@@ -99,8 +102,8 @@ if success is True:
 else:
     pass
 
-    # todo send me an email confirmation. Save to log.
-    # todo more/better exception handling
+    # todo Save to log.
+    # todo better exception handling
     # todo multiple folders
     # todo unit tests
     # todo Optimize
