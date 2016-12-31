@@ -102,9 +102,9 @@ if success is True:
 else:
     pass
 
-    # todo Save to log.
-    # todo better exception handling
-    # todo multiple folders
-    # todo unit tests
-    # todo Optimize
-    # todo simplify
+# TODO: Save to log.
+# TODO: better exception handling
+# TODO: multiple folders
+# TODO: unit tests
+# TODO: Optimize
+# TODO: simplify
